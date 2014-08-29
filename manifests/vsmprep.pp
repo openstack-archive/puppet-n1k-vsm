@@ -1,5 +1,7 @@
 class n1k_vsm::vsmprep {
   include 'stdlib'
+  require n1k_vsm
+  include n1k_vsm
   
   #
   # VSM package source parsing logic
@@ -20,7 +22,7 @@ class n1k_vsm::vsmprep {
   $VSM_ISO="vsm.iso"
 
   #
-  # prepare vsm spool folder
+  # prepare vsm folders
   #
   file {"File_VSM_Spool_Dir":
     path => "$VSM_Spool_Dir",
@@ -33,7 +35,18 @@ class n1k_vsm::vsmprep {
   exec {"Debug_File_VSM_Spool_Dir":
     command => "${n1k_vsm::Debug_Print} \"[INFO]\n File_VSM_Spool_Dir\n path=$VSM_Spool_Dir \n ensure=directory \n owner=root \n group=root \n mode=664 \n\" >> ${n1k_vsm::Debug_Log}",
   }
-
+ 
+  file {"File_VSM_RPM_Dir":
+    path => "$VSM_RPM_Install_Dir",
+    ensure => "directory",
+    owner => "root",
+    group => "root",
+    mode  => "664",
+  }
+  ->
+  exec {"Debug_File_VSM_RPM_Dir":
+    command => "${n1k_vsm::Debug_Print} \"[INFO]\n File_VSM_RPM_Install_Dir\n path=$VSM_RPM_Dir \n ensure=directory \n owner=root \n group=root \n mode=664 \n\" >> ${n1k_vsm::Debug_Log}",
+  }
 
   case "$source_method" {
     "http": {
@@ -150,13 +163,13 @@ class n1k_vsm::vsmprep {
   # Now generate ovf xml file and repackage the iso
   #
   exec {"Exec_VSM_Repackage_Script_Name":
-    command => "${VSM_Repackage_Script} -i$VSM_Spool_Dir/$VSM_ISO -d${n1k_vsm::domainid} -n${n1k_vsm::vsmname} -m${n1k_vsm::mgmtip} -s${n1k_vsm::mgmtnetmask} -g${n1k_vsm::mgmtgateway} -p${n1k_vsm::adminpasswd} -r${n1k_vsm::role} -f${VSM_Spool_Dir}/${n1k_vsm::role}_repacked.iso >> ${n1k_vsm::Debug_Log}",
+    command => "${VSM_Repackage_Script} -i$VSM_Spool_Dir/$VSM_ISO -d${n1k_vsm::vsm_domain_id} -n${n1k_vsm::vsmname} -m${n1k_vsm::mgmtip} -s${n1k_vsm::mgmtnetmask} -g${n1k_vsm::mgmtgateway} -p${n1k_vsm::vsm_admin_passwd} -r${n1k_vsm::vsm_role} -f${VSM_Spool_Dir}/${n1k_vsm::vsm_role}_repacked.iso >> ${n1k_vsm::Debug_Log}",
   }
   ->
   exec {"Debug_Exec_VSM_Repackage_Script_Name":
-    command => "${n1k_vsm::Debug_Print} \"[INFO]\n Exec_VSM_Repackage_Script_Name\n command=$VSM_Repackage_Script -i$VSM_ISO -d${n1k_vsm::domainid} -n${n1k_vsm::vsmname} -m${n1k_vsm::mgmtip} -s${n1k_vsm::mgmtnetmask} -g${n1k_vsm::mgmtgateway} -p${n1k_vsm::adminpasswd} -r${n1k_vsm::role} -f${VSM_Spool_Dir}/${n1k_vsm::role}_repacked.iso \n\" >> ${n1k_vsm::Debug_Log}"
+    command => "${n1k_vsm::Debug_Print} \"[INFO]\n Exec_VSM_Repackage_Script_Name\n command=$VSM_Repackage_Script -i$VSM_ISO -d${n1k_vsm::vsm_domain_id} -n${n1k_vsm::vsmname} -m${n1k_vsm::mgmtip} -s${n1k_vsm::mgmtnetmask} -g${n1k_vsm::mgmtgateway} -p${n1k_vsm::vsm_admin_passwd} -r${n1k_vsm::vsm_role} -f${VSM_Spool_Dir}/${n1k_vsm::vsm_role}_repacked.iso \n\" >> ${n1k_vsm::Debug_Log}"
   }
 
-  File["File_VSM_Spool_Dir"]-> Notify["$VSM_Bin_Prepare_Sync_Point"]->File["File_VSM_Repackage_Script_Name"]->Exec["Exec_VSM_Repackage_Script_Name"]
+  File["File_VSM_Spool_Dir"]->File["File_RPM_Install_Dir"]->Notify["$VSM_Bin_Prepare_Sync_Point"]->File["File_VSM_Repackage_Script_Name"]->Exec["Exec_VSM_Repackage_Script_Name"]
 
 }

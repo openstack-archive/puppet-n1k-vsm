@@ -2,44 +2,22 @@ class n1k_vsm::deploy {
 
   #ensure tap interfaces and deploy the vsm
 
-  $ctrltap = $n1k_vsm::ctrlinterface[0]
-  $ctrlmac = $n1k_vsm::ctrlinterface[1]
-  $ctrlbridge = $n1k_vsm::ctrlinterface[2]
-  $mgmttap = $n1k_vsm::mgmtinterface[0]
-  $mgmtmac = $n1k_vsm::mgmtinterface[1]
-  $mgmtbridge = $n1k_vsm::mgmtinterface[2]
-  $pkttap = $n1k_vsm::pktinterface[0]
-  $pktmac = $n1k_vsm::pktinterface[1]
-  $pktbridge = $n1k_vsm::pktinterface[2]
-
-#  tapint {"$ctrltap":
-#     bridge => $ctrlbridge,
-#     ensure => present
-#  }
-#
-#  tapint {"$mgmttap":
-#     bridge => $mgmtbridge,
-#     ensure => present
-#  }
-#
-#  tapint {"$pkttap":
-#     bridge => $pktbridge,
-#     ensure => present
-#  }
-
+  $ctrltap = "vsm-ctrl0"
+  $mgmttap = "vsm-mgmt0"
+  $pkttap = "vsm-pkt0" 
   
-  $diskfile = "/var/spool/vsm/${n1k_vsm::role}_disk"
+  #$diskfile = "/var/spool/vsm/${n1k_vsm::vsm_role}_disk"
 
   exec { "Exec_create_disk":
-    command => "/usr/bin/qemu-img create -f raw $diskfile ${n1k_vsm::disksize}G",
+    command => "/usr/bin/qemu-img create -f raw ${n1k_vsm::diskfile} ${n1k_vsm::disksize}G",
     unless => "/usr/bin/virsh list | grep -c ' ${n1k_vsm::vsmname} .* running'",
   }
   ->
   exec {"Debug_Exec_create_disk_debug":
-    command => "${n1k_vsm::Debug_Print} \"[INFO]\nExec_create_disk /usr/bin/qemu-img create -f raw $diskfile ${n1k_vsm::disksize}G\" >> ${n1k_vsm::Debug_Log}",
+    command => "${n1k_vsm::Debug_Print} \"[INFO]\nExec_create_disk /usr/bin/qemu-img create -f raw ${n1k_vsm::diskfile} ${n1k_vsm::disksize}G\" >> ${n1k_vsm::Debug_Log}",
   }
 
-  $targetxmlfile = "/var/spool/vsm/vsm_${n1k_vsm::role}_deploy.xml"
+  $targetxmlfile = "/var/spool/vsm/vsm_${n1k_vsm::vsm_role}_deploy.xml"
   file { "File_Target_XML_File":
     path  => "$targetxmlfile",
     owner => 'root',
@@ -54,8 +32,8 @@ class n1k_vsm::deploy {
   }
 
   exec { "Exec_Create_VSM":
-         command => "/usr/bin/virsh define $targetxmlfile",
-         unless => "/usr/bin/virsh list | grep -c ' ${n1k_vsm::vsmname} .* running'",
+         command => "/usr/bin/virsh define $targetxmlfile && /usr/bin/virsh autostart ${n1k_vsm::vsmname}",
+         unless => "/usr/bin/virsh list | grep -c ' ${n1k_vsm::vsmname} '",
   }
   ->
   exec {"Debug_Exec_Create_VSM":
@@ -73,4 +51,3 @@ class n1k_vsm::deploy {
 
   Exec["Exec_create_disk"] -> File["File_Target_XML_File"] -> Exec["Exec_Create_VSM"] -> Exec["Exec_Launch_VSM"]
 }
-

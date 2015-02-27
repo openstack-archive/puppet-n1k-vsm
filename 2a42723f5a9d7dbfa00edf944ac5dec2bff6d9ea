@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Code-Review+2: ChingWei Chang <cwchang@cisco.com>
+Workflow+1: ChingWei Chang <cwchang@cisco.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 27 Feb 2015 17:41:43 +0000
+Reviewed-on: https://review.openstack.org/158469
+Project: stackforge/puppet-n1k-vsm
+Branch: refs/heads/master

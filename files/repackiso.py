@@ -9,6 +9,9 @@ parser.add_option("-n", "--vsmname", help="VSM name", dest="vsmname")
 parser.add_option("-m", "--mgmtip", help="Management Ip address", dest="mgmtip")
 parser.add_option("-s", "--mgmtsubnet", help="Management Subnet", dest="mgmtsubnet")
 parser.add_option("-g", "--gateway", help="Management gateway", dest="mgmtgateway")
+parser.add_option("--mgmtipv6", help="Management IPV6 address", dest="mgmtipv6")
+parser.add_option("--mgmtsubnetv6", help="Management Subnet for IPv6", dest="mgmtsubnetv6")
+parser.add_option("--gatewayv6", help="Management gateway for IPv6", dest="mgmtgatewayv6")
 parser.add_option("-p", "--password", help="Admin account password", dest="adminpasswd")
 parser.add_option("-r", "--vsmrole", help="VSM Role, primary ,secondary or standalone", dest="vsmrole")
 parser.add_option("-f", "--file", help="Repackaged file", dest="repackediso")
@@ -20,6 +23,9 @@ vsmname = options.vsmname
 mgmtip = options.mgmtip
 mgmtsubnet = options.mgmtsubnet
 mgmtgateway = options.mgmtgateway
+mgmtipv6 = options.mgmtipv6
+mgmtsubnetv6 = options.mgmtsubnetv6
+mgmtgatewayv6 = options.mgmtgatewayv6
 adminpasswd = options.adminpasswd
 vsmrole = options.vsmrole
 repackediso = options.repackediso
@@ -42,7 +48,7 @@ class Command(object):
    def returncode(self):
        return self.failed
 
-def createOvfEnvXmlFile(domain, gateway, hostname, ip, subnet, password, vsm_mode):
+def createOvfEnvXmlFile(domain, gateway, hostname, ip, subnet, password, vsm_mode, ipv6, subnetv6, gatewayv6):
         #TODO: write a proper xml
         ovf_f = tempfile.NamedTemporaryFile(delete=False)
 
@@ -72,6 +78,10 @@ def createOvfEnvXmlFile(domain, gateway, hostname, ip, subnet, password, vsm_mod
         st += '<Property oe:key="HARole" oe:value="%s" /> \n' % (vsm_mode)
         st += '<Property oe:key="EnableOpenStack" oe:value="True" /> \n'
         st += '<Property oe:key="SaveBootVars" oe:value="True" /> \n'
+        if ipv6 != '::' and subnetv6 != '::' and gatewayv6 != '::':
+            st += '<Property oe:key="ManagementIpV6" oe:value="%s" /> \n' % (ipv6)
+            st += '<Property oe:key="ManagementIpV6Subnet" oe:value="%s" /> \n' % (subnetv6)
+            st += '<Property oe:key="GatewayIpV6" oe:value="%s" /> \n' % (gatewayv6)
         #if vsm_mode == "primary":
         #    st += '<Property oe:key="HARole" oe:value="%s" /> \n' % (vsm_mode)
         #else:
@@ -93,7 +103,16 @@ def main():
     #logger.addHandler(hdlr) 
     #logger.setLevel(logging.DEBUG)
 
-    ovf_f = createOvfEnvXmlFile(domain=domainid, gateway=mgmtgateway, hostname=vsmname, ip=mgmtip, subnet=mgmtsubnet, password=adminpasswd, vsm_mode=vsmrole)
+    ovf_f = createOvfEnvXmlFile(domain=domainid,
+                                gateway=mgmtgateway,
+                                hostname=vsmname,
+                                ip=mgmtip,
+                                subnet=mgmtsubnet,
+                                password=adminpasswd,
+                                vsm_mode=vsmrole,
+                                ipv6=mgmtipv6,
+                                subnetv6=mgmtsubnetv6,
+                                gatewayv6=mgmtgatewayv6)
 
     mntdir = tempfile.mkdtemp()
     ddir = tempfile.mkdtemp()

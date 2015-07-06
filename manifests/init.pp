@@ -6,6 +6,12 @@
 #
 # == Parameters:
 #
+# [*n1kv_source*]
+#  (required) Location where to get the Nexus1000v VSM ISO/RPM package
+#
+# [*n1kv_version*]
+#  (required) Version of the Nexus1000v VSM
+#
 # [*phy_if_bridge*]
 #  (required) Physical interface that will be moved to the bridge for mgmt trafic
 #
@@ -30,23 +36,29 @@
 # [*vsm_mgmt_gateway*]
 #  (required) IP of the default gateway for the management interface of the Nexus1000v VSM
 #
-# [*n1kv_source*]
-#  (required) Location where to get the Nexus1000v VSM ISO/RPM package
+# [*vsm_mgmt_ipv6*]
+#  IPv6 address of the management interface on the Nexus1000v VSM
 #
-# [*n1kv_version*]
-#  (required) Version of the Nexus1000v VSM
+# [*vsm_mgmt_netmaskv6*]
+#  IPv6 netmask of the management interface of the Nexus1000v VSM
 #
+# [*vsm_mgmt_gatewayv6*]
+#  IPv6 of the default gateway for the management interface of the Nexus1000v VSM
+
 class n1k_vsm(
-    $n1kv_source       = '',
-    $n1kv_version      = 'latest',
-    $phy_if_bridge     = 'enp1s0f0',
+    $n1kv_source          = '',
+    $n1kv_version         = 'latest',
+    $phy_if_bridge        = 'enp1s0f0',
     $phy_gateway,
-    $vsm_role          = 'primary',
+    $vsm_role             = 'primary',
     $vsm_domain_id,
     $vsm_admin_passwd,
     $vsm_mgmt_ip,
     $vsm_mgmt_netmask,
     $vsm_mgmt_gateway,
+    $vsm_mgmt_ipv6        = '::',
+    $vsm_mgmt_netmaskv6   = '::',
+    $vsm_mgmt_gatewayv6   = '::',
 ) {
 
     if($::osfamily != 'Redhat') {
@@ -56,15 +68,21 @@ class n1k_vsm(
     }
 
     if ($n1k_vsm::vsm_role == 'primary') or ($n1k_vsm::vsm_role == 'standalone') {
-      $vsmname          = 'vsm-p'
-      $mgmtip           = $vsm_mgmt_ip
-      $mgmtnetmask      = $vsm_mgmt_netmask
-      $mgmtgateway      = $vsm_mgmt_gateway
+      $vsmname       = 'vsm-p'
+      $mgmtip        = $vsm_mgmt_ip
+      $mgmtnetmask   = $vsm_mgmt_netmask
+      $mgmtgateway   = $vsm_mgmt_gateway
+      $mgmtipv6      = $vsm_mgmt_ipv6
+      $mgmtnetmaskv6 = $vsm_mgmt_netmaskv6
+      $mgmtgatewayv6 = $vsm_mgmt_gatewayv6
     } else { # secondary
-      $vsmname          = 'vsm-s'
-      $mgmtip           = '0.0.0.0'
-      $mgmtnetmask      = '0.0.0.0'
-      $mgmtgateway      = '0.0.0.0'
+      $vsmname            = 'vsm-s'
+      $mgmtip             = '0.0.0.0'
+      $mgmtnetmask        = '0.0.0.0'
+      $mgmtgateway        = '0.0.0.0'
+      $mgmtipv6           = '::'
+      $mgmtnetmaskv6      = '::'
+      $mgmtgatewayv6      = '::'
     }
 
     $consolepts         = 2

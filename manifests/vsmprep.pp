@@ -5,9 +5,9 @@
 #
 class n1k_vsm::vsmprep
 {
-  include 'stdlib'
-  require n1k_vsm
-  include n1k_vsm
+  include ::stdlib
+  require ::n1k_vsm
+  include ::n1k_vsm
 
   # prepare vsm folders
   ensure_resource('file', '/var/spool/cisco/', {

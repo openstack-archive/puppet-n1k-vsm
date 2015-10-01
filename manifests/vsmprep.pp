@@ -60,7 +60,7 @@ class n1k_vsm::vsmprep
       }
     }
     package {'nexus-1000v-iso':
-        ensure   => $n1k_vsm::n1kv_version,
+        ensure   => 'present',
         name     => 'nexus-1000v-iso',
         provider => 'yum',
     }

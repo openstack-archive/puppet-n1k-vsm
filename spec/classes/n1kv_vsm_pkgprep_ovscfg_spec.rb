@@ -37,6 +37,12 @@ describe 'n1k_vsm::pkgprep_ovscfg' do
            existing_bridge   => false,
          }"
       end
+      let :facts do 
+        {
+          :ipaddress_eth0 => '1.1.1.1',
+          :osfamily => 'RedHat' 
+        }
+      end
 
       it 'should require vswitch::ovs' do
          is_expected.to contain_class('vswitch::ovs')
@@ -52,7 +58,7 @@ describe 'n1k_vsm::pkgprep_ovscfg' do
       it 'flap bridge' do
         is_expected.to contain_exec('Flap_n1kv_bridge').with(
           'command'  => '/sbin/ifdown vsm-br && /sbin/ifup vsm-br',
-        )
+        ).that_requires('Augeas[Augeas_modify_ifcfg-ovsbridge]')
       end
 
       it 'attach phy if port to bridge' do
@@ -65,14 +71,14 @@ describe 'n1k_vsm::pkgprep_ovscfg' do
       it 'flap port' do
         is_expected.to contain_exec('Flap_n1kv_phy_if').with(
           'command'  => '/sbin/ifdown eth0 && /sbin/ifup eth0',
-        )
+        ).that_requires('Augeas[Augeas_modify_ifcfg-phy_if_bridge]')
       end
     end
 
     context 'for existing bridge' do
       let :pre_condition do
         "class { 'n1k_vsm':
-           phy_if_bridge     => 'br-ex',
+           phy_if_bridge     => 'br_ex',
            phy_gateway       => '1.1.1.3',
            vsm_domain_id     => '1',
            vsm_admin_passwd  => 'secrete',
@@ -81,6 +87,12 @@ describe 'n1k_vsm::pkgprep_ovscfg' do
            vsm_mgmt_gateway  => '1.1.1.2',
            existing_bridge   => true,
          }"
+      end
+      let :facts do
+        { 
+          :ipaddress_br_ex => '1.1.1.6',
+          :osfamily        => 'RedHat' 
+        }
       end
 
       it 'should require vswitch::ovs' do
@@ -97,22 +109,129 @@ describe 'n1k_vsm::pkgprep_ovscfg' do
       it 'flap bridge' do
         is_expected.to contain_exec('Flap_n1kv_bridge').with(
           'command'  => '/sbin/ifdown vsm-br && /sbin/ifup vsm-br',
-        )
+        ).that_requires('Augeas[Augeas_modify_ifcfg-ovsbridge]')
       end
 
       it 'create patch port on existing bridge' do
         is_expected.to contain_exec('Create_patch_port_on_existing_bridge').with(
-          'command' => '/bin/ovs-vsctl --may-exist add-port br-ex br-ex-vsm-br -- set Interface br-ex-vsm-br type=patch options:peer=vsm-br-br-ex'
-        )
+          'command' => '/bin/ovs-vsctl --may-exist add-port br_ex br_ex-vsm-br -- set Interface br_ex-vsm-br type=patch options:peer=vsm-br-br_ex'
+        ).that_requires('Exec[Flap_n1kv_bridge]')
       end
 
       it 'create patch port on vsm bridge' do
         is_expected.to contain_exec('Create_patch_port_on_vsm_bridge').with(
-          'command' => '/bin/ovs-vsctl --may-exist add-port vsm-br vsm-br-br-ex -- set Interface vsm-br-br-ex type=patch options:peer=br-ex-vsm-br'
-        ) 
+          'command' => '/bin/ovs-vsctl --may-exist add-port vsm-br vsm-br-br_ex -- set Interface vsm-br-br_ex type=patch options:peer=br_ex-vsm-br'
+        ).that_requires('Exec[Flap_n1kv_bridge]')
       end 
     end
+
+    context 'for existing bridge no ip' do
+      let :pre_condition do
+        "class { 'n1k_vsm':
+           phy_if_bridge     => 'br_ex',
+           phy_gateway       => '1.1.1.3',
+           vsm_domain_id     => '1',
+           vsm_admin_passwd  => 'secrete',
+           vsm_mgmt_ip       => '1.1.1.1',
+           vsm_mgmt_netmask  => '255.255.255.0',
+           vsm_mgmt_gateway  => '1.1.1.2',
+           existing_bridge   => true,
+         }"
+      end
+      let :facts do
+        {
+          :osfamily        => 'RedHat'
+        }
+      end
+
+      it 'should require vswitch::ovs' do
+         is_expected.to contain_class('vswitch::ovs')
+      end
+
+      it 'create ovs bridge' do
+        is_expected.to contain_augeas('Augeas_modify_ifcfg-ovsbridge').with(
+          'name'    => 'vsm-br',
+          'context' => '/files/etc/sysconfig/network-scripts/ifcfg-vsm-br',
+        )
+      end
+
+      it 'flap bridge' do
+        is_expected.to contain_exec('Flap_n1kv_bridge').with(
+          'command'  => '/sbin/ifdown vsm-br && /sbin/ifup vsm-br',
+        ).that_requires('Augeas[Augeas_modify_ifcfg-ovsbridge]')
+      end
+
+      it 'create patch port on existing bridge' do
+        is_expected.to contain_exec('Create_patch_port_on_existing_bridge').with(
+          'command' => '/bin/ovs-vsctl --may-exist add-port br_ex br_ex-vsm-br -- set Interface br_ex-vsm-br type=patch options:peer=vsm-br-br_ex'
+        ).that_requires('Exec[Flap_n1kv_bridge]')
+      end
+
+      it 'create patch port on vsm bridge' do
+        is_expected.to contain_exec('Create_patch_port_on_vsm_bridge').with(
+          'command' => '/bin/ovs-vsctl --may-exist add-port vsm-br vsm-br-br_ex -- set Interface vsm-br-br_ex type=patch options:peer=br_ex-vsm-br'
+        ).that_requires('Exec[Flap_n1kv_bridge]')
+      end
+    end
+
+    context 'for existing bridge tagged' do
+      let :pre_condition do
+        "class { 'n1k_vsm':
+           phy_if_bridge     => 'br_ex',
+           phy_gateway       => '1.1.1.3',
+           vsm_domain_id     => '1',
+           vsm_admin_passwd  => 'secrete',
+           vsm_mgmt_ip       => '1.1.1.1',
+           vsm_mgmt_netmask  => '255.255.255.0',
+           vsm_mgmt_gateway  => '1.1.1.2',
+           existing_bridge   => true,
+           phy_bridge_vlan   => 100,
+         }"
+      end
+      let :facts do
+        {
+          :ipaddress_br_ex => '1.1.1.6',
+          :osfamily        => 'RedHat'
+        }
+      end
+
+      it 'should require vswitch::ovs' do
+         is_expected.to contain_class('vswitch::ovs')
+      end
+
+      it 'create ovs bridge' do
+        is_expected.to contain_augeas('Augeas_modify_ifcfg-ovsbridge').with(
+          'name'    => 'vsm-br',
+          'context' => '/files/etc/sysconfig/network-scripts/ifcfg-vsm-br',
+        )
+      end
+
+      it 'flap bridge' do
+        is_expected.to contain_exec('Flap_n1kv_bridge').with(
+          'command'  => '/sbin/ifdown vsm-br && /sbin/ifup vsm-br',
+        ).that_requires('Augeas[Augeas_modify_ifcfg-ovsbridge]')
+      end
+
+      it 'create patch port on existing bridge' do
+        is_expected.to contain_exec('Create_patch_port_on_existing_bridge').with(
+          'command' => '/bin/ovs-vsctl --may-exist add-port br_ex br_ex-vsm-br -- set Interface br_ex-vsm-br type=patch options:peer=vsm-br-br_ex'
+        ).that_requires('Exec[Flap_n1kv_bridge]')
+      end
+
+      it 'create patch port on vsm bridge' do
+        is_expected.to contain_exec('Create_patch_port_on_vsm_bridge').with(
+          'command' => '/bin/ovs-vsctl --may-exist add-port vsm-br vsm-br-br_ex -- set Interface vsm-br-br_ex type=patch options:peer=br_ex-vsm-br'
+        ).that_requires('Exec[Flap_n1kv_bridge]')
+      end
+
+      it 'tag patch port' do
+        is_expected.to contain_exec('Tag_patch_port').with(
+          'command' => '/bin/ovs-vsctl set port br_ex-vsm-br tag=100'
+        ).that_requires('Exec[Create_patch_port_on_existing_bridge]')
+      end
+    end
   end
+
 
   context 'on RedHat platforms' do
     let :facts do

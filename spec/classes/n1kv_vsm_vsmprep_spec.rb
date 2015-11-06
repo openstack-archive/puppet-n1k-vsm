@@ -47,7 +47,7 @@ describe 'n1k_vsm::vsmprep' do
 
       it 'runs repackage iso script' do
         is_expected.to contain_exec('Exec_VSM_Repackage_Script').with(
-          :command => '/tmp/repackiso.py -i/var/spool/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
+          :command => '/tmp/repackiso.py -i/var/spool/cisco/vsm/current-n1000v.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
           :creates => '/var/spool/cisco/vsm/primary_repacked.iso'
         )
       end
@@ -83,7 +83,7 @@ describe 'n1k_vsm::vsmprep' do
       end
       it 'runs repackage iso script' do
         is_expected.to contain_exec('Exec_VSM_Repackage_Script').with(
-          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
           :creates => '/var/spool/cisco/vsm/primary_repacked.iso'
         )
       end
@@ -112,7 +112,7 @@ describe 'n1k_vsm::vsmprep' do
 
       it 'runs repackage iso script' do
         is_expected.to contain_exec('Exec_VSM_Repackage_Script').with(
-          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
           :creates => '/var/spool/cisco/vsm/primary_repacked.iso'
         )
       end
@@ -141,7 +141,7 @@ describe 'n1k_vsm::vsmprep' do
 
       it 'runs repackage iso script' do
         is_expected.to contain_exec('Exec_VSM_Repackage_Script').with(
-          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso -d1 -nvsm-s -m0.0.0.0 -s0.0.0.0 -g0.0.0.0 -psecrete -rsecondary -f/var/spool/cisco/vsm/secondary_repacked.iso',
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-s -m0.0.0.0 -s0.0.0.0 -g0.0.0.0 -psecrete -rsecondary -f/var/spool/cisco/vsm/secondary_repacked.iso',
           :creates => '/var/spool/cisco/vsm/secondary_repacked.iso'
         )
       end
@@ -168,16 +168,64 @@ describe 'n1k_vsm::vsmprep' do
         )
       end
 
+      it 'runs rename with version' do
+        is_expected.to contain_exec('Exec_VSM_Rename_with_version').with(
+          :command => '/bin/cp /opt/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso /opt/cisco/vsm/current-n1000v.iso',
+          :creates => '/opt/cisco/vsm/current-n1000v.iso'
+        )
+      end
+
       it 'runs repackage iso script' do
         is_expected.to contain_exec('Exec_VSM_Repackage_Script').with(
-          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
           :creates => '/var/spool/cisco/vsm/primary_repacked.iso'
         )
       end
 
       it 'runs repackage iso script secondary' do
         is_expected.to contain_exec('Exec_VSM_Repackage_Script_secondary').with(
-          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/n1000v-dk9.5.2.1.SK3.2.2a-1.iso -d1 -nvsm-s -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rsecondary -f/var/spool/cisco/vsm/secondary_repacked.iso',
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-s -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rsecondary -f/var/spool/cisco/vsm/secondary_repacked.iso',
+          :creates => '/var/spool/cisco/vsm/secondary_repacked.iso'
+        )
+      end
+    end
+    context 'get vsm from pre-configured repo pacemaker controlled latest version' do
+      let :pre_condition do
+        "class { 'n1k_vsm':
+           phy_gateway      => '1.1.1.3',
+           vsm_domain_id    => '1',
+           vsm_admin_passwd => 'secrete',
+           vsm_mgmt_ip      => '1.1.1.1',
+           vsm_mgmt_netmask => '255.255.255.0',
+           vsm_mgmt_gateway => '1.1.1.2',
+           n1kv_version     => 'latest',
+           pacemaker_control => true,
+         }"
+      end
+
+      # Currently we always just check if VSM is present
+      it 'installs latest n1kv sofware' do
+        is_expected.to contain_package('nexus-1000v-iso').with(
+          :ensure  => 'present',
+        )
+      end
+
+      it 'runs rename without version' do
+        is_expected.to contain_exec('Exec_VSM_Rename').with(
+          :creates => '/opt/cisco/vsm/current-n1000v.iso'
+        )
+      end
+
+      it 'runs repackage iso script' do
+        is_expected.to contain_exec('Exec_VSM_Repackage_Script').with(
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-p -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rprimary -f/var/spool/cisco/vsm/primary_repacked.iso',
+          :creates => '/var/spool/cisco/vsm/primary_repacked.iso'
+        )
+      end
+
+      it 'runs repackage iso script secondary' do
+        is_expected.to contain_exec('Exec_VSM_Repackage_Script_secondary').with(
+          :command => '/tmp/repackiso.py -i/opt/cisco/vsm/current-n1000v.iso -d1 -nvsm-s -m1.1.1.1 -s255.255.255.0 -g1.1.1.2 -psecrete -rsecondary -f/var/spool/cisco/vsm/secondary_repacked.iso',
           :creates => '/var/spool/cisco/vsm/secondary_repacked.iso'
         )
       end

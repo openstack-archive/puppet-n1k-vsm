@@ -1,0 +1,5 @@
+- project:
+    name: openstack/puppet-n1k-vsm
+    templates:
+      - puppet-openstack-check-jobs
+      - puppet-module-unit-jobs

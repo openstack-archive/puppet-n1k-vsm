@@ -1,0 +1,4 @@
+- project:
+    templates:
+      - puppet-openstack-check-jobs
+      - puppet-module-unit-jobs

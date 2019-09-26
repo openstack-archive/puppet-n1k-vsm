@@ -1,4 +1,3 @@
-puppet-n1k-vsm
-==============
+# This repo has moved to OpenDev
 
-VSM deployment code for N1k.
+It can now be found at [https://opendev.org/x/puppet-n1k-vsm](https://opendev.org/x/puppet-n1k-vsm)
